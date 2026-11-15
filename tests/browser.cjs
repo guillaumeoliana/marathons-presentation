@@ -22,7 +22,7 @@ async function run(name, options, extra) {
  const chapter=()=>page.locator('.city h2').innerText();
  const goto=async i=>{await page.locator('.menu-button').click();await menu.locator('button').nth(i).click();await page.waitForFunction(i=>document.querySelector('.city .label')?.textContent.includes('ESCALE '+String(i+1).padStart(2,'0'))&&!document.querySelector('.hud').inert,i);await page.waitForFunction(i=>Math.abs(scrollY-document.querySelector('#city-'+i).offsetTop)<8,i);};
  try {
- await page.goto(url,{waitUntil:'domcontentloaded'});await page.locator('canvas').waitFor();
+ await page.goto(url,{waitUntil:'domcontentloaded'});await page.locator('canvas').waitFor({timeout:30000});
  await test('transition intro sans écran vide',async()=>{
    await page.evaluate(()=>scrollTo(0,document.querySelector('#city-0').offsetTop*.92));
    await page.waitForFunction(()=>Number(document.querySelector('.hud').style.opacity)>.75);
@@ -55,4 +55,4 @@ async function run(name, options, extra) {
  console.log(JSON.stringify({engine,name,layout,renderer:await page.locator('.world').getAttribute('data-renderer'),passed,failures,errors}));
  }finally{await browser.close();}
 }
-(async()=>{await Promise.all(cases.map(args=>run(...args)));})().catch(e=>{console.error(e);process.exitCode=1});
+(async()=>{const gpuCases=cases.filter(c=>c[2].length===0),cpuCases=cases.filter(c=>c[2].length>0);await Promise.all(cpuCases.map(args=>run(...args)));for(const args of gpuCases)await run(...args);})().catch(e=>{console.error(e);process.exitCode=1});
