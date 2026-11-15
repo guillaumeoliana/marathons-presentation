@@ -151,3 +151,11 @@ dd{white-space:nowrap;margin:0}
   .stage-bottom{bottom:max(14px,env(safe-area-inset-bottom));min-height:44px}
   .stage-bottom button{min-height:44px}
 }
+
+main{pointer-events:none}
+main button,main a{pointer-events:auto}
+html{overflow-x:clip}
+@media(max-width:719px){
+  .hud{height:100svh;bottom:auto}
+  .stage-bottom{bottom:max(28px,env(safe-area-inset-bottom))}
+}

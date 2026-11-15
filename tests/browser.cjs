@@ -44,7 +44,12 @@ async function run(name, options, extra) {
  await test('sortie et retour',async()=>{await goto(9);await page.getByRole('button',{name:/Les destinations/}).click();await page.getByRole('button',{name:/Revenir au départ/}).click();await page.waitForFunction(()=>scrollY<2);});
  await test('mouvement et visibilité',async()=>{await goto(0);const canvas=page.locator('canvas');const a=await canvas.screenshot();await page.evaluate(()=>window.scrollBy(0,420));await page.waitForFunction(()=>document.querySelector('.phases [aria-current]')?.textContent==='À visiter'||document.querySelector('.phases [aria-current]')?.textContent==='Transport'||Number(document.querySelector('.progress i').style.height.slice(0,-1))>5);const b=await canvas.screenshot(); if(name!=='reduced')assert.notDeepEqual(a,b);});
  if(failures.length||errors.length)process.exitCode=1;
- console.log(JSON.stringify({engine,name,renderer:await page.locator('.world').getAttribute('data-renderer'),passed,failures,errors}));
+ const layout=failures.length?await page.evaluate(()=>{
+   const button=document.querySelector('.stage-bottom button');
+   const r=button.getBoundingClientRect();
+   return {viewport:[innerWidth,innerHeight,visualViewport.width,visualViewport.height,visualViewport.scale],scrollY,button:[r.x,r.y,r.width,r.height],hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.outerHTML.slice(0,150)};
+ }):undefined;
+ console.log(JSON.stringify({engine,name,layout,renderer:await page.locator('.world').getAttribute('data-renderer'),passed,failures,errors}));
  }finally{await browser.close();}
 }
 (async()=>{await Promise.all(cases.map(args=>run(...args)));})().catch(e=>{console.error(e);process.exitCode=1});
