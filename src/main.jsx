@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import races from './races';
+import visitPhotos from './visit-photos.json';
 import { names } from './monuments';
 import { startScene, order, accents } from './scene';
 import './style.css';
@@ -29,6 +30,16 @@ function go(id) {
   scrollToPosition(el?el.getBoundingClientRect().top+window.scrollY+3:0);
 }
 
+function VisitPhotos({id, stage=false}) {
+  return <div className={stage?'visit-photos':'visit-gallery'} aria-label="Photos des lieux à visiter">
+    {(visitPhotos[id]||[]).map(photo=><a className="visit-photo" key={photo.src} href={photo.source} target="_blank" rel="noreferrer" aria-label={photo.title+' — photo et crédits'}>
+      <img src={import.meta.env.BASE_URL+photo.src} alt={photo.title} width="640" height="420" loading="lazy" decoding="async"/>
+      <span>{photo.title} <b aria-hidden="true">↗</b></span>
+      {!stage&&<small>{photo.author} · {photo.license}</small>}
+    </a>)}
+  </div>;
+}
+
 function Travel({race, mode, nights, setMode, setNights, close}) {
   const {ride,stay,meals,total}=costs(race,mode,nights);
   return <article>
@@ -51,7 +62,7 @@ function Travel({race, mode, nights, setMode, setNights, close}) {
     ].map(([label,cost])=><div key={label}><dt>{label}</dt><dd>{range(cost)}</dd></div>)}</dl>
     <p className="fine">Fourchettes indicatives. Transferts sur place et frais éventuels en supplément.</p>
     <h3>Le trajet</h3><p>{ride.time}. {race.plan}</p>
-    <h3>À découvrir</h3><ul>{race.visits.map(place=><li key={place}>{place}</li>)}</ul>
+    <h3>À découvrir</h3><VisitPhotos id={race.id}/><ul>{race.visits.map(place=><li key={place}>{place}</li>)}</ul>
     <h3>Avant de réserver</h3><p>{race.note}</p>
     <div className="links">
       <a href={race.source} target="_blank" rel="noreferrer">Site de la course ↗</a>
@@ -121,7 +132,7 @@ function App() {
         <button className="underlined" onClick={()=>go()}>Revenir au départ <span>↑</span></button>
       </section>
     </main>
-    <div className="hud" inert={!showHud} style={{opacity:view.reveal*(1-view.outro)}}>
+    <div className={"hud"+(phase===1?" visiting":"")} inert={!showHud} style={{opacity:view.reveal*(1-view.outro)}}>
       <div className="city" key={race.id} style={{opacity:1-view.slide*.8}}>
         <p className="label">ESCALE {String(view.index+1).padStart(2,'0')} / 10 <span>{race.country}</span></p>
         <h2>{race.name}</h2><p>{race.tag}</p>
@@ -129,6 +140,7 @@ function App() {
       <div className="pin pin-left" data-pin><span>LA COURSE</span><strong>{race.date}</strong><small>42,195 KM · {race.profile}</small></div>
       <div className="pin pin-right" data-pin><span>BUDGET DU WEEK-END</span><strong>{range(total)}</strong><small>{nights} NUITS · {ride.label.toUpperCase()} A/R · PAR PERSONNE</small></div>
       <div className="pin pin-right monument" data-pin><span>LE MONUMENT</span><strong>{names[race.id]}</strong></div>
+      {phase===1&&<VisitPhotos id={race.id} stage/>}
       <aside className="story" key={race.id+'-'+phase} style={{opacity:1-view.slide*.78}}>
         <p className="label">{phases[phase].toUpperCase()}</p>
         <h3>{[race.profile,names[race.id],ride.time][phase]}</h3>

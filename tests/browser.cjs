@@ -24,15 +24,17 @@ async function run(name, options, extra) {
  try {
  await page.goto(url,{waitUntil:'domcontentloaded'});await page.locator('canvas').waitFor({timeout:30000});
  await test('transition intro sans écran vide',async()=>{
-   await page.evaluate(()=>scrollTo(0,document.querySelector('#city-0').offsetTop*.92));
-   await page.waitForFunction(()=>Number(document.querySelector('.hud').style.opacity)>.75);
+   for(const ratio of [.65,.75,.82,.92,1]) {
+    await page.evaluate(r=>scrollTo(0,document.querySelector('#city-0').offsetTop*r),ratio);
+    await page.waitForFunction(()=>Math.max(Number(document.querySelector('.hud').style.opacity),Number(document.querySelector('.intro-copy').style.opacity))>.5);
+   }
    await page.evaluate(()=>scrollTo(0,0));
    await page.waitForFunction(()=>Number(document.querySelector('.intro-copy').style.opacity)>.99);
  });
  await test('hero',async()=>{assert.match(await page.locator('h1').innerText(),/COUREZ/);await page.getByRole('button',{name:/Entrer dans/}).click();await page.waitForFunction(()=>!document.querySelector('.hud').inert);assert.match(await chapter(),/Milan/i);});
  for(let i=0;i<10;i++) await test('escale '+(i+1),async()=>{
   await goto(i);
-  if(name==='desktop'||name==='iphone-webkit') await page.screenshot({path:`test-results/${name}-${i}.png`});
+  if(name==='desktop'||name==='iphone-webkit') await page.screenshot({path:`test-results/${name}-${i}.png`,timeout:30000});
   const boxes=await page.evaluate(()=>{
    const box=s=>document.querySelector(s).getBoundingClientRect();
    const clash=(a,b)=>a.width&&b.width&&Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1;
@@ -41,11 +43,50 @@ async function run(name, options, extra) {
   });
   assert.equal(boxes.overflow,false,'débordement horizontal');assert.deepEqual(boxes.overlaps,[],'chevauchement '+JSON.stringify(boxes.overlaps));
  });
+ await test('photos des dix escales et commandes accessibles',async()=>{
+  for(let i=0;i<10;i++) {
+   await goto(i);
+   await page.locator('.phases').getByRole('button',{name:'À visiter',exact:true}).click();
+   await page.waitForFunction(()=>document.querySelectorAll('.visit-photos img').length===2&&[...document.querySelectorAll('.visit-photos img')].every(img=>img.complete&&img.naturalWidth>0));
+   const faults=await page.evaluate(()=>{
+    const nodes=[...document.querySelectorAll('.visit-photos a,.stage-bottom button,.story button')];
+    return nodes.filter(n=>{
+     const r=n.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+     return r.bottom>innerHeight||r.top<0||!n.contains(hit);
+    }).map(n=>n.textContent);
+   });
+   assert.deepEqual(faults,[],'contrôles masqués: '+faults.join(', '));
+   if((name==='desktop'||name==='iphone-webkit')&&i<2) await page.screenshot({path:`test-results/${name}-visits-${i}.png`,timeout:30000});
+  }
+ });
+ await test('défilement manuel et retour après redimensionnement',async()=>{
+  await goto(0);
+  if(engine==='chromium'&&options.isMobile) {
+   const cdp=await page.context().newCDPSession(page);
+   const x=Math.round(options.viewport.width*.55),bottom=Math.round(options.viewport.height*.75);
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y:bottom}]});
+   for(let step=1;step<=8;step++) await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:bottom-step*30}]});
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();
+  } else await page.mouse.wheel(0,240);
+  await page.waitForFunction(()=>scrollY>document.querySelector('#city-0').offsetTop+30);
+  const original=page.viewportSize();await page.setViewportSize({...original,height:original.height-75});
+  await page.locator('.phases').getByRole('button',{name:'Transport',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('.phases [aria-current]')?.textContent==='Transport');
+  await page.setViewportSize(original);await goto(0);
+ });
  await test('phases',async()=>{await goto(0);for(const phase of ['À visiter','Transport','Course']){await page.locator('.phases').getByRole('button',{name:phase,exact:true}).click();await page.waitForFunction(p=>document.querySelector('.phases [aria-current]')?.textContent===p,phase);}});
  await test('carnet / budget',async()=>{await page.getByRole('button',{name:/Carnet de voyage/}).click(); const d=page.getByRole('dialog');await d.waitFor(); const before=await d.locator('.total').innerText();await d.getByLabel('Durée du séjour').selectOption('3');assert.notEqual(await d.locator('.total').innerText(),before);await d.getByLabel(/Transport depuis/).selectOption('train');assert.match(await d.locator('dl').innerText(),/Train aller-retour/);await page.keyboard.press('Escape');await d.waitFor({state:'hidden'});});
  await test('navigation suivante',async()=>{await goto(0);await page.getByRole('button',{name:/Prochaine escale/}).click();await page.waitForFunction(()=>document.querySelector('.city h2').textContent==='Lac d’Annecy');});
  await test('sortie et retour',async()=>{await goto(9);await page.getByRole('button',{name:/Les destinations/}).click();await page.getByRole('button',{name:/Revenir au départ/}).click();await page.waitForFunction(()=>scrollY<2);});
  await test('mouvement et visibilité',async()=>{await goto(0);const canvas=page.locator('canvas');const rect=await canvas.boundingBox();const a=await page.screenshot({clip:rect});await page.evaluate(()=>window.scrollBy(0,420));await page.waitForFunction(()=>document.querySelector('.phases [aria-current]')?.textContent==='À visiter'||document.querySelector('.phases [aria-current]')?.textContent==='Transport'||Number(document.querySelector('.progress i').style.height.slice(0,-1))>5);const b=await page.screenshot({clip:rect}); if(name!=='reduced')assert.notDeepEqual(a,b);});
+ await test('perte du contexte 3D et navigation de secours',async()=>{
+  if(await page.locator('.world').getAttribute('data-renderer')!=='webgl') return;
+  await page.evaluate(()=>document.querySelector('canvas').dispatchEvent(new Event('webglcontextlost',{cancelable:true})));
+  await page.waitForFunction(()=>document.querySelector('.world').dataset.renderer==='canvas');
+  await goto(2);assert.match(await chapter(),/Nantes/);
+  await page.locator('.phases').getByRole('button',{name:'À visiter',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('.visit-photos img')?.naturalWidth>0);
+ });
  if(failures.length||errors.length)process.exitCode=1;
  const layout=failures.length?await page.evaluate(()=>{
    const button=document.querySelector('.stage-bottom button');

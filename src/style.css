@@ -166,3 +166,32 @@ html{overflow-x:clip}
   .story{bottom:max(100px,16svh)}
   .mobile-facts{bottom:max(104px,17svh)}
 }
+
+/* Photographs float beside the monument during the visit chapter. */
+.visit-photos{position:absolute;inset:0;pointer-events:none}
+.visit-photo{display:block;pointer-events:auto;color:#eee9dc}
+.visit-photo img{display:block;width:100%;aspect-ratio:1.52;height:auto;object-fit:cover;background:#24343e;border:1px solid #e6dac145}
+.visit-photo>span{display:flex;justify-content:space-between;gap:8px;font-size:11px;line-height:1.4;margin-top:8px}
+.visit-photo b{color:var(--accent);font-weight:400}
+.visit-photos .visit-photo{position:absolute;top:37svh;left:7.2vw;width:clamp(135px,17vw,245px);animation:show .4s ease-out}
+.visit-photos .visit-photo:nth-child(2){left:auto;right:6vw;top:29svh}
+.visiting .pin{visibility:hidden}
+.visit-gallery{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:16px 0}
+.visit-gallery small{display:block;font-size:9px;color:#b4c2c9;margin-top:5px;line-height:1.5}
+@media(max-width:719px){
+  .world{height:100svh;bottom:auto}
+  .city{top:max(80px,12svh)}
+  .visit-photos .visit-photo,.visit-photos .visit-photo:nth-child(2){top:34svh;width:27vw;left:5vw;right:auto}
+  .visit-photos .visit-photo:nth-child(2){left:auto;right:5vw}
+  .visit-photo>span{font-size:9px;margin-top:5px}
+  .visiting .story h3{font-size:20px}
+  .visit-gallery{gap:10px}
+}
+@media(max-height:495px){
+  .visit-photos .visit-photo,.visit-photos .visit-photo:nth-child(2){top:30svh;width:18vw;left:auto;right:25vw}
+  .visit-photos .visit-photo:nth-child(2){right:5vw}
+}
+@media(max-width:719px) and (min-height:496px){
+  .visit-photos .visit-photo,.visit-photos .visit-photo:nth-child(2){top:38svh}
+  .visit-photos .visit-photo>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.25}
+}

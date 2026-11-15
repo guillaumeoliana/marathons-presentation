@@ -1,0 +1,182 @@
+{
+  "0": [
+    {
+      "src": "photos/visit-0-0.webp",
+      "title": "Grand Curtius",
+      "author": "Trougnouf (Benoit Brummer)",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Curtius_(DSCF7671).jpg"
+    },
+    {
+      "src": "photos/visit-0-1.webp",
+      "title": "Montagne de Bueren",
+      "author": "Choinowski",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Montagne_de_Bueren_in_2017.jpg"
+    }
+  ],
+  "1": [
+    {
+      "src": "photos/visit-1-0.webp",
+      "title": "Château de Blois",
+      "author": "Krzysztof Golik",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Louis_XII_wing_of_the_castle_of_Blois_01.jpg"
+    },
+    {
+      "src": "photos/visit-1-1.webp",
+      "title": "Château de Troussay",
+      "author": "Calame (attribution indiquée sur Wikimedia)",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "source": "https://commons.wikimedia.org/wiki/File:Troussay_fa%C3%A7ade.JPG"
+    }
+  ],
+  "2": [
+    {
+      "src": "photos/visit-2-0.webp",
+      "title": "Canaux de la vieille ville",
+      "author": "Pareloup",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:AnnecyThiou.jpg"
+    },
+    {
+      "src": "photos/visit-2-1.webp",
+      "title": "Village de Talloires",
+      "author": "Florival fr Rémi Stosskopf",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Lac_D%27Annecy-Talloires.jpg"
+    }
+  ],
+  "3": [
+    {
+      "src": "photos/visit-3-0.webp",
+      "title": "Les Machines de l’île",
+      "author": "Guilhem Vellut from Annecy, France",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Les_Machines_de_l%27Ile_@_Nantes_(7929839186).jpg"
+    },
+    {
+      "src": "photos/visit-3-1.webp",
+      "title": "Passage Pommeraye",
+      "author": "Velvet",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "source": "https://commons.wikimedia.org/wiki/File:Nantes_passage_pommeraye.JPG"
+    }
+  ],
+  "4": [
+    {
+      "src": "photos/visit-4-0.webp",
+      "title": "Saumur et les bords de Loire",
+      "author": "Martin Falbisoner",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Panorama_of_Saumur.JPG"
+    },
+    {
+      "src": "photos/visit-4-1.webp",
+      "title": "Château de Saumur",
+      "author": "Kamel15",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Ch%C3%A2teau_de_Saumur_2008_PD_10.JPG"
+    }
+  ],
+  "5": [
+    {
+      "src": "photos/visit-5-0.webp",
+      "title": "Galleria Vittorio Emanuele II",
+      "author": "Marco Pagani",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Galleria_Milano_(179532365).jpeg"
+    },
+    {
+      "src": "photos/visit-5-1.webp",
+      "title": "Pinacothèque de Brera",
+      "author": "Jean-Christophe BENOIST",
+      "license": "CC BY 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Milan_-_Pinacoth%C3%A8que_de_Brera_-_Cour_int%C3%A9rieure.jpg",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    }
+  ],
+  "6": [
+    {
+      "src": "photos/visit-6-0.webp",
+      "title": "Vieux Namur",
+      "author": "CEphoto, Uwe Aranas",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Namur_Belgium_Old-town-01.jpg"
+    },
+    {
+      "src": "photos/visit-6-1.webp",
+      "title": "Citadelle de Namur",
+      "author": "Jean-Pol GRANDMONT",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Namur_JPG07.jpg"
+    }
+  ],
+  "7": [
+    {
+      "src": "photos/visit-7-0.webp",
+      "title": "Chinon et la Vienne",
+      "author": "Benjamin Smith",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Chinon_-_View_from_the_castle_-_07.jpg"
+    },
+    {
+      "src": "photos/visit-7-1.webp",
+      "title": "Forteresse royale",
+      "author": "Benjamin Smith",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Chinon_-_Ch%C3%A2teau_vu_depuis_la_plage.jpg"
+    }
+  ],
+  "8": [
+    {
+      "src": "photos/visit-8-0.webp",
+      "title": "Quartier du Grund",
+      "author": "Suicasmo",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:%C3%89glise_Saint-Jean_(Neum%C3%BCnster)_20180627.jpg"
+    },
+    {
+      "src": "photos/visit-8-1.webp",
+      "title": "Palais grand-ducal",
+      "author": "Berthold Werner",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Luxemburg_BW_2016-09-15_11-46-49_stitch.jpg",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  ],
+  "9": [
+    {
+      "src": "photos/visit-9-0.webp",
+      "title": "Plage de Pontaillac",
+      "author": "Jack ma",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Royan_plage_pontaillac.JPG"
+    },
+    {
+      "src": "photos/visit-9-1.webp",
+      "title": "Port de Royan",
+      "author": "Cobber17",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Port_Royan.jpg"
+    }
+  ]
+}

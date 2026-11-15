@@ -1,5 +1,4 @@
 import * as T from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { makeMonument } from './monuments';
 
 export const order = [5,2,3,4,1,7,0,6,8,9];
@@ -66,7 +65,7 @@ export function startScene(host, onChange) {
     const context=canvas.getContext('webgl2',{alpha:true,antialias:true});
     if (!context) throw new Error('WebGL2 indisponible');
     renderer=new T.WebGLRenderer({canvas,context,alpha:true,antialias:true});
-    renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));
+    renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<720?1.25:1.5));
     renderer.toneMapping=T.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.12;
     renderer.shadowMap.enabled=true;
@@ -99,19 +98,24 @@ export function startScene(host, onChange) {
 
   const scene=new T.Scene();
   const camera=new T.PerspectiveCamera(36,1,.1,100);
+  // Small studio cubemap avoids rendering and convolving a complete room at startup.
   let environment;
   if(gpu) {
-    const pmrem=new T.PMREMGenerator(renderer);
-    const room=new RoomEnvironment();
-    environment=pmrem.fromScene(room,.04);
-    scene.environment=environment.texture;
-    scene.environmentIntensity=.42;
-    room.dispose(); pmrem.dispose();
+    const faces=['#a7b7c2','#d1c4ad','#f2eee2','#293d42','#b2c5d0','#647b8b'].map(color=>{
+      const face=document.createElement('canvas');face.width=face.height=16;
+      const ctx=face.getContext('2d');
+      const gradient=ctx.createLinearGradient(0,0,0,16);
+      gradient.addColorStop(0,color);gradient.addColorStop(1,'#31444d');
+      ctx.fillStyle=gradient;ctx.fillRect(0,0,16,16);return face;
+    });
+    environment=new T.CubeTexture(faces);
+    environment.colorSpace=T.SRGBColorSpace;environment.needsUpdate=true;
+    scene.environment=environment;scene.environmentIntensity=.42;
   }
   scene.add(new T.HemisphereLight('#dceaff','#394338',.95));
   const key=new T.DirectionalLight('#ffe0b7',2.7);
   key.position.set(-5,9,7);
-  key.castShadow=true; key.shadow.mapSize.set(1024,1024);
+  key.castShadow=true; key.shadow.mapSize.set(innerWidth<720?512:1024,innerWidth<720?512:1024);
   Object.assign(key.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:.5,far:35});
   key.shadow.bias=-.0004; key.shadow.normalBias=.035; key.shadow.radius=3;
   scene.add(key);
@@ -158,15 +162,15 @@ export function startScene(host, onChange) {
     end=arrival.getBoundingClientRect().top+scrollY;
   }
 
-  let tickId, previous=0, y=scrollY, lastReport=-1, lastY=-1;
+  let tickId, previous=0, y=scrollY, lastY=-1;
   function tick(t) {
     tickId=requestAnimationFrame(tick);
     if (document.hidden || (t-previous<(gpu?25:40))) return;
-    const dt=Math.min(250,t-previous); previous=t;
+    previous=t;
     const target=scrollY;
-    // Native smooth scrolling already supplies easing for navigation.
-    y=!gpu||reduce.matches||Math.abs(target-y)<1?target:y+(target-y)*(1-Math.exp(-dt/65));
-    if((!gpu||reduce.matches)&&y===lastY) return;
+    // Follow the native scroll directly: a second easing made the HUD lag on touch screens.
+    y=target;
+    if(y===lastY) return;
     if(gpu && y!==lastY) renderer.shadowMap.needsUpdate=true;
     lastY=y;
     let index=starts.findLastIndex(start=>y>=start);
@@ -174,7 +178,7 @@ export function startScene(host, onChange) {
     const fraction=clamp((y-starts[index])/((starts[index+1]??end)-starts[index]));
     const slide=index<models.length-1?ease(clamp((fraction-.77)/.23)):0;
     const intro=ease(clamp((y-starts[0]*.28)/(starts[0]*.54)));
-    const reveal=ease(clamp((y-starts[0]*.72)/(starts[0]*.22)));
+    const reveal=ease(clamp((y-starts[0]*.52)/(starts[0]*.28)));
     const outro=clamp((y-end+h*.23)/(h*.55));
     const mobile=w<720;
     const motion=reduce.matches?0:1;
@@ -191,7 +195,7 @@ export function startScene(host, onChange) {
       model.position.set(-p*16,-Math.sin(Math.abs(p)*Math.PI)*1.6,0);
       model.rotation.y=-.52+(i===index?fraction*.74:0)*motion+p*1.45*motion;
     });
-    const raceAngle=motion*((gpu?t*.00035:0)+fraction*4);
+    const raceAngle=motion*fraction*4;
     marker.position.set(6.7*Math.sin(raceAngle),-.69,6.7*Math.cos(raceAngle));
     try {
       renderer.render(scene,camera);
@@ -206,8 +210,7 @@ export function startScene(host, onChange) {
       el.style.top=clamp((1-projected.y)*h*.5,150,h-126)+'px';
       el.style.opacity=1-slide;
     });
-    if(t-lastReport>32||!gpu||reduce.matches) {
-      lastReport=t;
+    {
       const progress=clamp(y/(document.documentElement.scrollHeight-innerHeight));
       onChange({index,intro,outro,reveal,fraction,slide,progress});
     }
@@ -215,10 +218,14 @@ export function startScene(host, onChange) {
   const invalidate=()=>{lastY=-1;resize()};
   resize(); tickId=requestAnimationFrame(tick);
   window.addEventListener('resize',invalidate);
+  window.visualViewport?.addEventListener('resize',invalidate);
+  window.addEventListener('pageshow',invalidate);
   reduce.addEventListener('change',invalidate);
   return ()=>{
     cancelAnimationFrame(tickId);
     window.removeEventListener('resize',invalidate);
+    window.visualViewport?.removeEventListener('resize',invalidate);
+    window.removeEventListener('pageshow',invalidate);
     reduce.removeEventListener('change',invalidate);
     scene.traverse(o=>o.geometry?.dispose());
     materials.forEach(m=>m.dispose());
