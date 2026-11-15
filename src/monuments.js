@@ -94,10 +94,22 @@ export function makeMonument(id, materials, detailed = false) {
     roof.scale.z=1.12; roof.rotation.y=Math.PI/4;
     tower(0,-.95,2.05,.46);
     front(4,1,1.52,2.25);
-    for(let i=0;i<5;i++) {
-      const h=2.6+(i%3)*.65;
-      cone(-3.8+i*1.9,h/2,-2.75,1.38,h,'#607986',4);
-      cone(-3.8+i*1.9,h-.22,-2.75,.5,.6,'#d3ddde',4);
+    // A continuous Alpine silhouette with broken ridgelines, rather than cone primitives.
+    for(let layer=0;layer<2;layer++) {
+      const ridge=[[-5,.2],[-4.4,1.05],[-3.7,1.7],[-3.2,1.45],[-2.5,2.65],[-1.9,2.23],[-1.15,3.4],[-.55,2.73],[.2,3.9],[.75,3.1],[1.4,2.55],[2,2.83],[2.7,1.8],[3.35,2.15],[4.2,.95],[5,.12]];
+      const outline=new T.Shape(); outline.moveTo(-5,0);
+      for(const [x,y] of ridge) outline.lineTo(x,y*(layer?.75:1));
+      outline.lineTo(5,0);outline.closePath();
+      add(new T.ExtrudeGeometry(outline,{depth:.32,bevelEnabled:false}),layer?'#536e70':'#789195',layer*.25,0,-3.65+layer*.6);
+    }
+    if(detailed) {
+      for(const x of [-1.47,1.47]) for(const z of [-1,-.35,.3,.95]) {
+        box(x,.94,z,.05,.4,.19,ink);
+        box(x,.71,z,.1,.05,.28,stone);
+      }
+      for(const x of [-.65,0,.65]) slot(x,.95,1.53,.19,.4);
+      box(0,.06,2.15,1.35,.1,1.8,stone);
+      for(const x of [-.62,.62]) for(let z=1.5;z<3;z+=.25) box(x,.28,z,.035,.4,.035,gold);
     }
     box(0,.08,2.3,1.15,.16,1.8,gold);
   } else if(id===0) {
