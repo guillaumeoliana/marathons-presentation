@@ -1,4 +1,5 @@
 import * as T from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { makeMonument } from './monuments';
 
 export const order = [5,2,3,4,1,7,0,6,8,9];
@@ -67,7 +68,9 @@ export function startScene(host, onChange) {
     renderer=new T.WebGLRenderer({canvas,context,alpha:true,antialias:true});
     renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));
     renderer.toneMapping=T.ACESFilmicToneMapping;
-    renderer.toneMappingExposure=1.35;
+    renderer.toneMappingExposure=1.12;
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=T.PCFSoftShadowMap;
   } catch {
     gpu=false;
     canvas=document.createElement('canvas');
@@ -85,20 +88,53 @@ export function startScene(host, onChange) {
     gpu=false;
     renderer=softwareRenderer(canvas);
     host.dataset.renderer='canvas';
+    models.forEach((model,i)=>{
+      display.remove(model); model.traverse(o=>o.geometry?.dispose());
+      models[i]=makeMonument(order[i],materials,false); display.add(models[i]);
+    });
     invalidate();
   }
   canvas.addEventListener('webglcontextlost',useSoftware);
 
   const scene=new T.Scene();
   const camera=new T.PerspectiveCamera(36,1,.1,100);
-  scene.add(new T.HemisphereLight('#e5efff','#33413e',2.35));
+  let environment;
+  if(gpu) {
+    const pmrem=new T.PMREMGenerator(renderer);
+    const room=new RoomEnvironment();
+    environment=pmrem.fromScene(room,.04);
+    scene.environment=environment.texture;
+    scene.environmentIntensity=.42;
+    room.dispose(); pmrem.dispose();
+  }
+  scene.add(new T.HemisphereLight('#dceaff','#394338',.95));
   const key=new T.DirectionalLight('#ffe0b7',2.7);
-  key.position.set(-5,9,7); scene.add(key);
-  const rim=new T.DirectionalLight('#94c6ff',2.1);
+  key.position.set(-5,9,7);
+  key.castShadow=true; key.shadow.mapSize.set(1024,1024);
+  Object.assign(key.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:.5,far:35});
+  key.shadow.bias=-.0004; key.shadow.normalBias=.035; key.shadow.radius=3;
+  scene.add(key);
+  const rim=new T.DirectionalLight('#b6d5ef',1.5);
   rim.position.set(6,3,-6); scene.add(rim);
 
   const materials=new Map();
-  const models=order.map(id=>makeMonument(id,materials));
+  let stoneTexture;
+  if(gpu) {
+    const surface=document.createElement('canvas'); surface.width=256;surface.height=256;
+    const ctx=surface.getContext('2d'), pixels=ctx.createImageData(256,256);
+    let seed=817;
+    for(let i=0;i<pixels.data.length;i+=4) {
+      seed=(seed*1664525+1013904223)>>>0;
+      const value=170+(seed>>>26);
+      pixels.data.set([value,value,value,255],i);
+    }
+    ctx.putImageData(pixels,0,0);
+    stoneTexture=new T.CanvasTexture(surface);
+    stoneTexture.wrapS=stoneTexture.wrapT=T.RepeatWrapping;
+    stoneTexture.repeat.set(3,3);
+    materials.set('__stone',stoneTexture);
+  }
+  const models=order.map(id=>makeMonument(id,materials,gpu));
   const display=new T.Group();
   scene.add(display);
   display.add(...models);
@@ -186,6 +222,7 @@ export function startScene(host, onChange) {
     materials.forEach(m=>m.dispose());
     road.material.dispose(); marker.material.dispose();
     canvas.removeEventListener('webglcontextlost',useSoftware);
+    environment?.dispose();
     renderer.dispose(); canvas.remove();
   };
 }

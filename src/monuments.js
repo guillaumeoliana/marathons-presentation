@@ -1,4 +1,6 @@
 import * as T from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const stone = '#decbb2';
 const slate = '#395666';
@@ -7,20 +9,38 @@ const ink = '#25333e';
 
 export const names = ['Gare des Guillemins', 'Château de Cheverny', 'Palais de l’Île', 'Château des ducs de Bretagne', 'Château de Saumur', 'Duomo di Milano', 'Citadelle de Namur', 'Forteresse royale', 'Pont Adolphe', 'Notre-Dame de Royan'];
 
-export function makeMonument(id, materials) {
+// Geometry is built once, then batched by material: detail without hundreds of draw calls.
+export function makeMonument(id, materials, detailed = false) {
   const group = new T.Group();
   function add(geometry, color, x, y, z) {
-    if (!materials.has(color)) materials.set(color, new T.MeshStandardMaterial({color, roughness: .62}));
+    if (!materials.has(color)) {
+      const metal=color===gold, glass=color===ink;
+      const material=new T.MeshStandardMaterial({color, roughness:metal?.32:glass?.23:.82, metalness:metal?.72:glass?.25:.04});
+      if(detailed && !metal && !glass) {
+        const texture=materials.get('__stone');
+        if(texture) {material.bumpMap=texture;material.bumpScale=.025;}
+      }
+      materials.set(color,material);
+    }
     const mesh = new T.Mesh(geometry, materials.get(color));
     mesh.position.set(x, y, z);
+    mesh.castShadow=true; mesh.receiveShadow=true;
     group.add(mesh);
     return mesh;
   }
-  const box = (x,y,z,w,h,d,c=stone) => add(new T.BoxGeometry(w,h,d),c,x,y,z);
+  const box = (x,y,z,w,h,d,c=stone) => add(detailed && Math.min(w,h,d)>.15 ? new RoundedBoxGeometry(w,h,d,1,Math.min(.035,Math.min(w,h,d)*.12)) : new T.BoxGeometry(w,h,d),c,x,y,z);
   const cylinder = (x,y,z,r,h,c=stone,n=16) => add(new T.CylinderGeometry(r,r,h,n),c,x,y,z);
   const cone = (x,y,z,r,h,c=slate,n=8) => add(new T.ConeGeometry(r,h,n),c,x,y,z);
   const arch = (x,y,z,r,c=stone,t=.08) => add(new T.TorusGeometry(r,t,5,20,Math.PI),c,x,y,z);
-  const slot = (x,y,z,w=.21,h=.54) => box(x,y,z,w,h,.07,ink);
+  const slot = (x,y,z,w=.21,h=.54) => {
+    const window=box(x,y,z,w,h,.07,ink);
+    if(detailed) {
+      box(x,y-h/2-.035,z+.04,w+.12,.06,.13,stone);
+      box(x,y,z+.045,.025,h,.02,gold);
+      box(x,y+.06,z+.045,w,.025,.02,gold);
+    }
+    return window;
+  };
   function tower(x,z,h,r,roof=true) {
     cylinder(x,h/2,z,r,h);
     slot(x,h*.72,z+r);
@@ -35,7 +55,8 @@ export function makeMonument(id, materials) {
   }
 
   const water = [2,8,9].includes(id);
-  cylinder(0,-.37,0,5.7,.62,water?'#256274':'#344e48',48);
+  cylinder(0,-.37,0,5.7,.62,'#263b40',64);
+  cylinder(0,-.045,0,5.65,.045,water?'#367e88':'#7c8b78',64);
   cylinder(0,-.72,0,5.35,.12,gold,48);
 
   if(id===5) {
@@ -151,6 +172,81 @@ export function makeMonument(id, materials) {
     const a=i*2.399,x=Math.cos(a)*4.7,z=Math.sin(a)*4.7;
     box(x,.18,z,.12,.36,.12,'#756448');
     cone(x,.67,z,.36,.95,i%2?'#4b8876':'#6d9678',7);
+  }
+  if(detailed) {
+    // A stepped limestone plinth, engraved paving and a fine brass perimeter.
+    cylinder(0,-.83,0,5.5,.12,'#172a30',64);
+    const edge=add(new T.TorusGeometry(5.6,.018,4,96),gold,0,-.01,0);
+    edge.rotation.x=Math.PI/2;
+    if(!water) {
+      for(let i=-4;i<=4;i++) {
+        const extent=Math.sqrt(5.45**2-i*i);
+        box(i,-.012,0,.014,.012,extent*2,'#a0a897');
+        box(0,-.01,i,extent*2,.012,.014,'#a0a897');
+      }
+    } else {
+      for(let i=0;i<12;i++) {
+        const z=-4.5+i*.78, width=Math.sqrt(Math.max(0,25-z*z));
+        box(Math.sin(i*2.3)*.4,-.008,z,width*.72,.008,.018,'#72a9ae');
+      }
+    }
+    // Masonry courses, cornices and side windows on the château family.
+    if([1,3,4].includes(id)) {
+      for(const y of [.18,.44,1.35,2.58]) {
+        box(0,y,1.48,5.18,.065,.12,'#eee0c9');
+        box(0,y,-1.48,5.18,.065,.12,'#eee0c9');
+      }
+      for(const z of [-.85,0,.85]) for(const x of [-2.62,2.62]) {
+        box(x,1.92,z,.06,.5,.24,ink);
+        box(x,1.64,z,.1,.06,.35,stone);
+      }
+      for(const x of [-1.7,-.85,.85,1.7]) {
+        box(x,2.92,1.05,.34,.48,.32,stone);
+        cone(x,3.26,1.05,.3,.3,slate,4).rotation.y=Math.PI/4;
+        slot(x,2.95,1.23,.16,.26);
+      }
+    }
+    if(id===5) {
+      // Gothic tracery, recessed portals, buttresses and a gilded central spire.
+      for(let step=0;step<3;step++) box(0,.04+step*.065,2.05+step*.15,7.5-step*.2,.07,.7,'#eee0d0');
+      for(const x of [-2.35,-1.18,0,1.18,2.35]) {
+        for(const dx of [-.32,.32]) box(x+dx,1.2,1.98,.075,1.95,.16,'#eee0d0');
+        for(let j=0;j<3;j++) arch(x,1.86+j*.035,2.02+j*.02,.29+j*.055,stone,.023);
+        for(const dx of [-.1,.1]) box(x+dx,2.58,1.94,.023,.64,.04,gold);
+      }
+      for(const z of [-1.5,-.9,-.3,.3,.9,1.5]) for(const x of [-2.7,2.7]) {
+        const brace=box(x,3.07,z,.09,1.18,.12,stone);
+        brace.rotation.z=x<0?-.6:.6;
+        cone(x,3.92,z,.1,.53,'#eee0d0',4);
+      }
+      for(let j=0;j<12;j++) {
+        const a=j*Math.PI/6;
+        const spoke=box(Math.cos(a)*.26,3.24+Math.sin(a)*.26,1.91,.018,.21,.035,stone);
+        spoke.rotation.z=a-Math.PI/2;
+      }
+    }
+    // Small globe trees instead of toy cones; restrained architectural entourage.
+    for(let i=0;i<6;i++) {
+      const a=i*1.05+.25, x=Math.cos(a)*4.9, z=Math.sin(a)*4.9;
+      if(water && z>0) continue;
+      cylinder(x,.21,z,.035,.42,'#756448',6);
+      const crown=add(new T.IcosahedronGeometry(.29,1),i%2?'#648676':'#80947a',x,.59,z);
+      crown.scale.set(1,1.3,1);
+    }
+  }
+  // Bake transforms before merging; preserve per-city group transforms for the scroll choreography.
+  const batches=new Map();
+  for(const mesh of [...group.children]) {
+    mesh.updateMatrix();
+    const geometry=(mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone()).applyMatrix4(mesh.matrix);
+    if(!batches.has(mesh.material)) batches.set(mesh.material,[]);
+    batches.get(mesh.material).push(geometry);
+    mesh.geometry.dispose(); group.remove(mesh);
+  }
+  for(const [material,geometries] of batches) {
+    const mesh=new T.Mesh(mergeGeometries(geometries),material);
+    mesh.castShadow=true; mesh.receiveShadow=true; group.add(mesh);
+    geometries.forEach(geometry=>geometry.dispose());
   }
   return group;
 }
