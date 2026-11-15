@@ -75,6 +75,19 @@ export function startScene(host, onChange) {
   }
   host.append(canvas);
   host.dataset.renderer=gpu?'webgl':'canvas';
+  function useSoftware(event) {
+    event?.preventDefault();
+    canvas.removeEventListener('webglcontextlost',useSoftware);
+    renderer.dispose();
+    const replacement=document.createElement('canvas');
+    canvas.replaceWith(replacement);
+    canvas=replacement;
+    gpu=false;
+    renderer=softwareRenderer(canvas);
+    host.dataset.renderer='canvas';
+    invalidate();
+  }
+  canvas.addEventListener('webglcontextlost',useSoftware);
 
   const scene=new T.Scene();
   const camera=new T.PerspectiveCamera(36,1,.1,100);
@@ -112,23 +125,25 @@ export function startScene(host, onChange) {
   function tick(t) {
     tickId=requestAnimationFrame(tick);
     if (document.hidden || (!gpu && t-previous<40)) return;
-    const dt=Math.min(70,t-previous); previous=t;
+    const dt=Math.min(250,t-previous); previous=t;
     const target=scrollY;
-    y=reduce.matches||Math.abs(target-y)<.35?target:y+(target-y)*(1-Math.exp(-dt/105));
-    if(reduce.matches && y===lastY) return;
+    // Native smooth scrolling already supplies easing for navigation.
+    y=!gpu||reduce.matches||Math.abs(target-y)<1?target:y+(target-y)*(1-Math.exp(-dt/65));
+    if((!gpu||reduce.matches)&&y===lastY) return;
     lastY=y;
     let index=starts.findLastIndex(start=>y>=start);
     index=Math.max(0,index);
     const fraction=clamp((y-starts[index])/((starts[index+1]??end)-starts[index]));
     const slide=index<models.length-1?ease(clamp((fraction-.77)/.23)):0;
-    const intro=clamp(y/(starts[0]*.86));
+    const intro=ease(clamp((y-starts[0]*.28)/(starts[0]*.54)));
+    const reveal=ease(clamp((y-starts[0]*.72)/(starts[0]*.22)));
     const outro=clamp((y-end+h*.23)/(h*.55));
     const mobile=w<720;
     const motion=reduce.matches?0:1;
     const orbit=motion*(.12*Math.sin((index+fraction)*1.6)+fraction*.12);
     const distance=mobile?Math.max(24,13*w/h+20):22.3-fraction*.9*motion;
     camera.position.set(distance*Math.sin(orbit),8.65+fraction*.9*motion,distance*Math.cos(orbit));
-    camera.lookAt(mobile?0:-1.35,mobile?1.9:1.6,0);
+    camera.lookAt(mobile?0:-1.35,mobile?2.35:1.6,0);
     display.position.set(mobile?0:.7,mobile?.1:0,0);
     display.scale.setScalar(mobile ? Math.min(1,w/h*2.05) : 1);
     models.forEach((model,i)=>{
@@ -138,19 +153,25 @@ export function startScene(host, onChange) {
       model.position.set(-p*16,-Math.sin(Math.abs(p)*Math.PI)*1.6,0);
       model.rotation.y=-.52+(i===index?fraction*.74:0)*motion+p*1.45*motion;
     });
-    const raceAngle=motion*(t*.00035+fraction*4);
+    const raceAngle=motion*((gpu?t*.00035:0)+fraction*4);
     marker.position.set(6.7*Math.sin(raceAngle),-.69,6.7*Math.cos(raceAngle));
-    renderer.render(scene,camera);
+    try {
+      renderer.render(scene,camera);
+    } catch (error) {
+      if(!gpu) throw error;
+      useSoftware();
+      return;
+    }
     pins.forEach((el,i)=>{
       projected.copy(points[i]).add(display.position).project(camera);
       el.style.left=clamp((projected.x+1)*w*.5,205,w-218)+'px';
       el.style.top=clamp((1-projected.y)*h*.5,150,h-126)+'px';
       el.style.opacity=1-slide;
     });
-    if(t-lastReport>48||reduce.matches) {
+    if(t-lastReport>32||!gpu||reduce.matches) {
       lastReport=t;
       const progress=clamp(y/(document.documentElement.scrollHeight-innerHeight));
-      onChange({index,intro,outro,chapter:y>=starts[0],fraction,slide,progress});
+      onChange({index,intro,outro,reveal,fraction,slide,progress});
     }
   }
   const invalidate=()=>{lastY=-1;resize()};
@@ -164,6 +185,7 @@ export function startScene(host, onChange) {
     scene.traverse(o=>o.geometry?.dispose());
     materials.forEach(m=>m.dispose());
     road.material.dispose(); marker.material.dispose();
+    canvas.removeEventListener('webglcontextlost',useSoftware);
     renderer.dispose(); canvas.remove();
   };
 }

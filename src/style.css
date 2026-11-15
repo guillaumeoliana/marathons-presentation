@@ -108,3 +108,24 @@ dd{white-space:nowrap;margin:0}
 }
 @media(max-height:595px) and (min-width:720px){.story{bottom:12vh}.city h2{font-size:11vh}.intro h1{font-size:19vh}.pin{scale:.88}.intro-copy{top:21%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Keep text readable on narrow and short viewports, including system font fallback. */
+.city{max-width:86vw}
+.city h2{overflow-wrap:anywhere}
+.intro h1{font-size:clamp(64px,11vw,190px)}
+@media (max-width:719px){
+  .intro h1{font-size:clamp(49px,19.5vw,120px)}
+  .city h2{font-size:clamp(40px,11.5vw,84px)}
+  .story{bottom:max(70px,11.5svh)}
+  .mobile-facts{bottom:max(79px,14svh);max-width:32vw}
+}
+@media (max-height:495px){
+  .pin,.coordinates{display:none}
+  header{height:55px}
+  .city{top:58px}
+  .city h2{font-size:clamp(38px,8vh,60px)}
+  .story h3{font-size:21px}
+  .intro h1{font-size:min(18vh,15vw)}
+  .intro-copy{top:18vh}
+  .scroll-cue{display:none}
+}

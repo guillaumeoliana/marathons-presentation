@@ -24,6 +24,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Install test browsers
+        run: npx playwright install --with-deps chromium webkit
+      - name: Test production build in Chromium and WebKit
+        run: |
+          python3 -m http.server 4180 --bind 127.0.0.1 --directory dist &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          npm run test:browser
+          WEBKIT=1 npm run test:browser
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -19,10 +19,14 @@ function costs(race, mode, nights) {
   return {ride,stay,meals,total};
 }
 
+function scrollToPosition(top) {
+  const behavior=matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth';
+  window.scrollTo({top,behavior});
+}
+
 function go(id) {
   const el=document.getElementById(id);
-  const behavior=matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth';
-  window.scrollTo({top:el?el.getBoundingClientRect().top+window.scrollY+2:0,behavior});
+  scrollToPosition(el?el.getBoundingClientRect().top+window.scrollY+3:0);
 }
 
 function Travel({race, mode, nights, setMode, setNights, close}) {
@@ -58,13 +62,13 @@ function Travel({race, mode, nights, setMode, setNights, close}) {
 
 function App() {
   const world=useRef(null), dialog=useRef(null);
-  const [view,setView]=useState({index:0,chapter:false,intro:0,outro:0,fraction:0,slide:0,progress:0});
+  const [view,setView]=useState({index:0,reveal:0,intro:0,outro:0,fraction:0,slide:0,progress:0});
   const [menu,setMenu]=useState(false), [details,setDetails]=useState(null);
   const [mode,setMode]=useState('bus'), [nights,setNights]=useState(2);
   const race=races[order[view.index]];
   const {ride,total}=costs(race,mode,nights);
   const phase=view.fraction<.29?0:view.fraction<.57?1:2;
-  const showHud=view.chapter&&view.outro<.92;
+  const showHud=view.reveal>.7&&view.outro<.92;
   useEffect(()=>startScene(world.current,setView),[]);
   useEffect(()=>{
     if(details===null) {
@@ -98,7 +102,7 @@ function App() {
     </nav>
     <main>
       <section className="intro" aria-labelledby="hero-title">
-        <div className="intro-copy" style={{opacity:1-view.intro,transform:'translateY('+(-75*view.intro)+'px)'}}>
+        <div className="intro-copy" inert={view.intro>.95} style={{opacity:1-view.intro,transform:'translateY('+(-75*view.intro)+'px)'}}>
           <p className="label">10 MARATHONS EN FRANCE ET EN EUROPE</p>
           <h1 id="hero-title">COUREZ<br/><em>AILLEURS.</em></h1>
           <p className="intro-detail">Les courses du printemps 2027,<br/>accessibles en train ou en bus depuis Paris.</p>
@@ -117,7 +121,7 @@ function App() {
         <button className="underlined" onClick={()=>go()}>Revenir au départ <span>↑</span></button>
       </section>
     </main>
-    <div className="hud" inert={!showHud} style={{opacity:showHud?1-view.outro:0}}>
+    <div className="hud" inert={!showHud} style={{opacity:view.reveal*(1-view.outro)}}>
       <div className="city" key={race.id} style={{opacity:1-view.slide*.8}}>
         <p className="label">ESCALE {String(view.index+1).padStart(2,'0')} / 10 <span>{race.country}</span></p>
         <h2>{race.name}</h2><p>{race.tag}</p>
@@ -135,7 +139,7 @@ function App() {
       <footer className="stage-bottom">
         <div className="phases">{phases.map((name,i)=><button key={name} aria-current={phase===i?'step':undefined} onClick={()=>{
           const el=document.getElementById('city-'+view.index);
-          window.scrollTo({top:el.getBoundingClientRect().top+scrollY+el.offsetHeight*(i===0?.01:i===1?.32:.60),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+          scrollToPosition(el.getBoundingClientRect().top+scrollY+el.offsetHeight*(i===0?.01:i===1?.32:.60));
         }}>{name}</button>)}</div>
         <button className="next" onClick={()=>go(view.index===9?'arrival':'city-'+(view.index+1))}>{view.index===9?'Les destinations':'Prochaine escale'} <span>↓</span></button>
       </footer>
