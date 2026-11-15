@@ -31,8 +31,10 @@ jobs:
           python3 -m http.server 4180 --bind 127.0.0.1 --directory dist &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
-          npm run test:browser
-          WEBKIT=1 npm run test:browser
+          result=0
+          npm run test:browser || result=1
+          WEBKIT=1 npm run test:browser || result=1
+          exit "$result"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

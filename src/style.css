@@ -159,3 +159,10 @@ html{overflow-x:clip}
   .hud{height:100svh;bottom:auto}
   .stage-bottom{bottom:max(28px,env(safe-area-inset-bottom))}
 }
+
+.app{overflow-x:clip}
+.chapter{position:relative}
+@media(max-width:719px){
+  .story{bottom:max(100px,16svh)}
+  .mobile-facts{bottom:max(104px,17svh)}
+}
