@@ -142,3 +142,12 @@ dd{white-space:nowrap;margin:0}
 .menu button{min-height:46px}
 @media(max-width:719px){.menu{top:74px;padding-top:8px}}
 @media(max-height:495px){.menu{top:55px}}
+
+/* Scroll spacers must not receive taps meant for the stage controls. */
+.chapter{pointer-events:none}
+.stage-bottom{pointer-events:auto;z-index:1}
+.hud[inert] .stage-bottom{pointer-events:none}
+@media(max-width:719px){
+  .stage-bottom{bottom:max(14px,env(safe-area-inset-bottom));min-height:44px}
+  .stage-bottom button{min-height:44px}
+}
