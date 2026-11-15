@@ -70,6 +70,7 @@ export function startScene(host, onChange) {
     renderer.toneMapping=T.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.12;
     renderer.shadowMap.enabled=true;
+    renderer.shadowMap.autoUpdate=false;
     renderer.shadowMap.type=T.PCFSoftShadowMap;
   } catch {
     gpu=false;
@@ -160,12 +161,13 @@ export function startScene(host, onChange) {
   let tickId, previous=0, y=scrollY, lastReport=-1, lastY=-1;
   function tick(t) {
     tickId=requestAnimationFrame(tick);
-    if (document.hidden || (!gpu && t-previous<40)) return;
+    if (document.hidden || (t-previous<(gpu?25:40))) return;
     const dt=Math.min(250,t-previous); previous=t;
     const target=scrollY;
     // Native smooth scrolling already supplies easing for navigation.
     y=!gpu||reduce.matches||Math.abs(target-y)<1?target:y+(target-y)*(1-Math.exp(-dt/65));
     if((!gpu||reduce.matches)&&y===lastY) return;
+    if(gpu && y!==lastY) renderer.shadowMap.needsUpdate=true;
     lastY=y;
     let index=starts.findLastIndex(start=>y>=start);
     index=Math.max(0,index);
