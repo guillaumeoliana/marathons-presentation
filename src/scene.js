@@ -181,9 +181,9 @@ export function startScene(host, onChange) {
     const orbit=motion*(.12*Math.sin((index+fraction)*1.6)+fraction*.12);
     const distance=mobile?Math.max(24,13*w/h+20):22.3-fraction*.9*motion;
     camera.position.set(distance*Math.sin(orbit),8.65+fraction*.9*motion,distance*Math.cos(orbit));
-    camera.lookAt(mobile?0:-1.35,mobile?2.35:1.6,0);
+    camera.lookAt(mobile?0:-1.35,mobile?1.1:1.6,0);
     display.position.set(mobile?0:.7,mobile?.1:0,0);
-    display.scale.setScalar(mobile ? Math.min(1,w/h*2.05) : 1);
+    display.scale.setScalar(mobile ? Math.min(.74,w/h*1.65) : 1);
     models.forEach((model,i)=>{
       model.visible=i===index||(slide>0&&i===index+1);
       if(!model.visible) return;
