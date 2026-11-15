@@ -129,3 +129,16 @@ dd{white-space:nowrap;margin:0}
   .intro-copy{top:18vh}
   .scroll-cue{display:none}
 }
+
+/* The scrollable menu starts below the fixed header so every option stays tappable. */
+.menu{
+  top:96px;
+  padding-top:18px;
+  align-content:start;
+  overscroll-behavior:contain;
+  scroll-padding-block:16px;
+  padding-bottom:max(28px,env(safe-area-inset-bottom));
+}
+.menu button{min-height:46px}
+@media(max-width:719px){.menu{top:74px;padding-top:8px}}
+@media(max-height:495px){.menu{top:55px}}

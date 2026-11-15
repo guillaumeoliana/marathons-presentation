@@ -15,7 +15,7 @@ async function run(name, options, extra) {
  const page=await browser.newPage({...options,ignoreHTTPSErrors:true}); page.setDefaultTimeout(9000);
  await page.route('https://fonts.googleapis.com/**',route=>route.abort());
  page.on('pageerror',e=>errors.push(e.message));
- const test=async(label,fn)=>{try{await fn();passed++}catch(e){failures.push(label+': '+e.message.split('\n')[0])}};
+ const test=async(label,fn)=>{try{await fn();passed++}catch(e){failures.push(label+': '+e.message.split('\n').slice(0,14).join(' | '))}};
  const menu=page.locator('#escales');
  const chapter=()=>page.locator('.city h2').innerText();
  const goto=async i=>{await page.locator('.menu-button').click();await menu.locator('button').nth(i).click();await page.waitForFunction(i=>document.querySelector('.city .label')?.textContent.includes('ESCALE '+String(i+1).padStart(2,'0'))&&!document.querySelector('.hud').inert,i);await page.waitForFunction(i=>Math.abs(scrollY-document.querySelector('#city-'+i).offsetTop)<8,i);};
