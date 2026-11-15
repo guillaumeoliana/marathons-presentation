@@ -35,6 +35,12 @@ jobs:
           npm run test:browser || result=1
           WEBKIT=1 npm run test:browser || result=1
           exit "$result"
+      - name: Save visual review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-review
+          path: test-results/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

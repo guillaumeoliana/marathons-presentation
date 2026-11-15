@@ -1,5 +1,7 @@
 const {chromium,webkit,devices}=require('playwright');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+fs.mkdirSync('test-results',{recursive:true});
 const engine=process.env.WEBKIT?'webkit':'chromium';
 const url=process.env.QA_URL||'http://127.0.0.1:4180';
 const cases=engine==='webkit'?[['iphone-webkit',{...devices['iPhone 13'],defaultBrowserType:undefined},[]]]:[
@@ -30,6 +32,7 @@ async function run(name, options, extra) {
  await test('hero',async()=>{assert.match(await page.locator('h1').innerText(),/COUREZ/);await page.getByRole('button',{name:/Entrer dans/}).click();await page.waitForFunction(()=>!document.querySelector('.hud').inert);assert.match(await chapter(),/Milan/i);});
  for(let i=0;i<10;i++) await test('escale '+(i+1),async()=>{
   await goto(i);
+  if(name==='desktop'||name==='iphone-webkit') await page.screenshot({path:`test-results/${name}-${i}.png`});
   const boxes=await page.evaluate(()=>{
    const box=s=>document.querySelector(s).getBoundingClientRect();
    const clash=(a,b)=>a.width&&b.width&&Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1;
