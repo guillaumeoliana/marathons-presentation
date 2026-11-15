@@ -178,7 +178,7 @@ export function startScene(host, onChange) {
     const fraction=clamp((y-starts[index])/((starts[index+1]??end)-starts[index]));
     const slide=index<models.length-1?ease(clamp((fraction-.77)/.23)):0;
     const intro=ease(clamp((y-starts[0]*.28)/(starts[0]*.54)));
-    const reveal=ease(clamp((y-starts[0]*.52)/(starts[0]*.28)));
+    const reveal=ease(clamp((y-starts[0]*.4)/(starts[0]*.3)));
     const outro=clamp((y-end+h*.23)/(h*.55));
     const mobile=w<720;
     const motion=reduce.matches?0:1;
