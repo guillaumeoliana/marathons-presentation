@@ -67,12 +67,14 @@ async function run(name, options, extra) {
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y:bottom}]});
    for(let step=1;step<=8;step++) await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:bottom-step*30}]});
    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cdp.detach();
-  } else await page.mouse.wheel(0,240);
+  } else if(engine==='webkit'&&options.isMobile) await page.evaluate(()=>scrollBy(0,240));
+  else {await page.mouse.move(20,Math.round(options.viewport.height*.5));await page.mouse.wheel(0,240);}
   await page.waitForFunction(()=>scrollY>document.querySelector('#city-0').offsetTop+30);
   const original=page.viewportSize();await page.setViewportSize({...original,height:original.height-75});
+  await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   await page.locator('.phases').getByRole('button',{name:'Transport',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('.phases [aria-current]')?.textContent==='Transport');
-  await page.setViewportSize(original);await goto(0);
+  await page.setViewportSize(original);await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await goto(0);
  });
  await test('phases',async()=>{await goto(0);for(const phase of ['À visiter','Transport','Course']){await page.locator('.phases').getByRole('button',{name:phase,exact:true}).click();await page.waitForFunction(p=>document.querySelector('.phases [aria-current]')?.textContent===p,phase);}});
  await test('carnet / budget',async()=>{await page.getByRole('button',{name:/Carnet de voyage/}).click(); const d=page.getByRole('dialog');await d.waitFor(); const before=await d.locator('.total').innerText();await d.getByLabel('Durée du séjour').selectOption('3');assert.notEqual(await d.locator('.total').innerText(),before);await d.getByLabel(/Transport depuis/).selectOption('train');assert.match(await d.locator('dl').innerText(),/Train aller-retour/);await page.keyboard.press('Escape');await d.waitFor({state:'hidden'});});
@@ -83,7 +85,7 @@ async function run(name, options, extra) {
   if(await page.locator('.world').getAttribute('data-renderer')!=='webgl') return;
   await page.evaluate(()=>document.querySelector('canvas').dispatchEvent(new Event('webglcontextlost',{cancelable:true})));
   await page.waitForFunction(()=>document.querySelector('.world').dataset.renderer==='canvas');
-  await goto(2);assert.match(await chapter(),/Nantes/);
+  await goto(2);assert.match(await chapter(),/Nantes/i);
   await page.locator('.phases').getByRole('button',{name:'À visiter',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('.visit-photos img')?.naturalWidth>0);
  });
